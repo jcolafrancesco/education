@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu d'Addition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #ffe6f2;
+        }
+
+        #game {
+            background-color: #ffccff;
+            border: 1px solid #ff99cc;
+            border-radius: 10px;
+            padding: 20px;
+            display: inline-block;
+            margin-top: 50px;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+        }
+
+        #options button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff66b3;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        #options button:hover {
+            background-color: #ff3399;
+        }
+
+        #question {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ff0080;
+        }
+
+        #score {
+            margin-top: 20px;
+        }
+
+        #goodScore {
+            color: green;
+        }
+
+        #badScore {
+            color: red;
+        }
+
+        #config {
+            margin-bottom: 20px;
+        }
+
+        #celebration {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #celebration img {
+            width: 150px;
+            height: auto;
+            animation: celebrate 1s infinite;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>Jeu d'Addition</h1>
+        <div id="config">
+            <label for="maxValue">Chiffre maximum: </label>
+            <input type="number" id="maxValue" value="20" min="1" max="100">
+            <button onclick="startGame()">Démarrer</button>
+        </div>
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="score">
+            <p>Bons points: <span id="goodScore">0</span></p>
+            <p>Mauvais points: <span id="badScore">0</span></p>
+        </div>
+        <div id="celebration" class="hidden">
+            <img id="rewardImage" src="" alt="Récompense">
+        </div>
+    </div>
+    <script>
+        let goodScore = 0;
+        let badScore = 0;
+
+        const rewardImages = [
+            'https://media1.autourdugateau.fr/13412/impression-alimentaire-danseuse-etoile.jpg',
+            'https://media.istockphoto.com/id/1364557568/fr/vectoriel/cartoon-belle-t%C3%AAte-de-licorne-est-sur-le-nuage-avec-de-belles-fleurs.jpg?s=612x612&w=0&k=20&c=AMHehlvaLDNXNRcpa9s7I_4I84sVcX8wrw7CD6NMOxs=',
+            'https://www.color-stickers.com/1906-thickbox_default/sticker-ocean-sirene-rose.jpg',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRML2tzDdcZr7lKkQ5NN8pjSOsDeHLptryUiQ&s'
+        ];
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateQuestion() {
+            const maxVal = parseInt(document.getElementById('maxValue').value);
+            const num1 = getRandomInt(1, maxVal);
+            const num2 = getRandomInt(1, maxVal);
+            const correctAnswer = num1 + num2;
+            let wrongAnswer1 = correctAnswer;
+            let wrongAnswer2 = correctAnswer;
+
+            while (wrongAnswer1 === correctAnswer) {
+                wrongAnswer1 = correctAnswer + getRandomInt(1, 10);
+            }
+
+            while (wrongAnswer2 === correctAnswer || wrongAnswer2 === wrongAnswer1 || wrongAnswer2 < 0) {
+                wrongAnswer2 = correctAnswer - getRandomInt(1, 10);
+            }
+
+            const answers = [correctAnswer, wrongAnswer1, wrongAnswer2].sort(() => Math.random() - 0.5);
+
+            document.getElementById('question').innerText = `${num1} + ${num2} = ?`;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+
+            answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer;
+                button.addEventListener('click', () => checkAnswer(answer, correctAnswer));
+                optionsDiv.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedAnswer, correctAnswer) {
+            if (selectedAnswer === correctAnswer) {
+                goodScore++;
+                document.getElementById('goodScore').innerText = goodScore;
+                if (goodScore % 10 === 0) {
+                    showCelebration();
+                }
+            } else {
+                badScore++;
+                document.getElementById('badScore').innerText = badScore;
+            }
+            generateQuestion();
+        }
+
+        function startGame() {
+            document.getElementById('config').style.display = 'none';
+            generateQuestion();
+        }
+
+        function showCelebration() {
+            const randomImage = rewardImages[Math.floor(Math.random() * rewardImages.length)];
+            document.getElementById('rewardImage').src = randomImage;
+            const celebration = document.getElementById('celebration');
+            celebration.classList.remove('hidden');
+            celebration.style.display = 'block';
+            setTimeout(() => {
+                celebration.classList.add('hidden');
+                celebration.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

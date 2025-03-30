@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tables d'Addition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans flex items-center justify-center h-screen">
+    <div class="bg-white shadow-xl rounded-2xl p-8 w-96">
+        <h1 class="text-2xl font-bold mb-4 text-center">Apprendre les tables d'addition</h1>
+        <div id="selectNumber" class="mb-4">
+            <label class="block mb-2 font-medium">Choisissez un nombre (1 à 10)</label>
+            <select id="numberChoice" class="w-full p-2 border rounded">
+                <option value="" disabled selected>Choisir</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+            </select>
+            <button onclick="startGame()" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">Commencer</button>
+        </div>
+
+        <div id="gameArea" class="hidden">
+            <div id="question" class="text-center font-semibold mb-4"></div>
+            <div id="options" class="grid grid-cols-2 gap-4"></div>
+            <div class="mt-4 flex justify-between">
+                <span class="text-green-600">Bonnes réponses: <span id="correctCount">0</span></span>
+                <span class="text-red-600">Mauvaises réponses: <span id="wrongCount">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let N;
+        let correctAnswer;
+        let correctCount = 0;
+        let wrongCount = 0;
+
+        function startGame() {
+            const select = document.getElementById('numberChoice');
+            N = parseInt(select.value);
+
+            if (!N) return alert('Veuillez choisir un nombre valide !');
+
+            document.getElementById('selectNumber').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            const num1 = Math.floor(Math.random() * 11);
+            const num2 = Math.floor(Math.random() * (N + 1));
+            correctAnswer = num1 + num2;
+
+            document.getElementById('question').innerText = `Combien font ${num1} + ${num2} ?`;
+
+            let answers = [correctAnswer];
+            while (answers.length < 6) {
+                let wrongAnswer = Math.floor(Math.random() * (N + 11));
+                if (!answers.includes(wrongAnswer)) answers.push(wrongAnswer);
+            }
+
+            answers.sort(() => Math.random() - 0.5);
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+
+            answers.forEach(answer => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-gray-200 hover:bg-gray-300 py-2 rounded';
+                btn.innerText = answer;
+                btn.onclick = () => checkAnswer(answer);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected) {
+            if (selected === correctAnswer) {
+                correctCount++;
+                document.getElementById('correctCount').innerText = correctCount;
+            } else {
+                wrongCount++;
+                document.getElementById('wrongCount').innerText = wrongCount;
+            }
+            nextQuestion();
+        }
+    </script>
+</body>
+</html>

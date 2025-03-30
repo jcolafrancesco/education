@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Addition Game</title>
+    <style>
+body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f2f2f2;
+            color: #333;
+            margin: 0;
+            height: 100vh;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 2em;
+            color: #0073e6;
+        }
+        #menu, #game {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        button {
+            background: #0073e6;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #005bb5;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .hidden {
+            display: none;
+        }
+        .number-box, .carry-box, .input-box {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            margin: 0 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0073e6;
+            text-align: center;
+        }
+        .carry-box {
+            color: #ff4d4d;
+        }
+        .highlighted {
+            background-color: #ffd700;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .operator-box {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0073e6;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .number-selection {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .selection-box {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            margin: 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0073e6;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid #0073e6;
+            border-radius: 5px;
+            background: #e6f2ff;
+            transition: background 0.3s, color 0.3s;
+        }
+        .selection-box.selected {
+            background: #0073e6;
+            color: #fff;
+        }
+        .selection-box:hover {
+            background: #0073e6;
+            color: #fff;
+        }
+        .horizontal-bar {
+            border-top: 2px solid #333;
+            width: calc(50px * var(--num-columns) + (var(--num-columns) * 10px));
+            margin: 0 auto;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .feedback.success {
+            color: green;
+        }
+        .feedback.error {
+            color: red;
+        }
+        .leading-zero {
+            visibility: hidden;
+        }
+        .leading-zero {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>Select Number of Digits</h1>
+        <button onclick="startGame(2)">2 Digits</button>
+        <button onclick="startGame(3)">3 Digits</button>
+        <button onclick="startGame(4)">4 Digits</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <h1>Add the Numbers</h1>
+        <div class="row">
+            <div class="operator-box" style="visibility:hidden;">+</div>
+            <div id="carryRow"></div>
+        </div>
+        <div class="row">
+            <div class="operator-box" style="visibility:hidden;">+</div>
+            <div id="number1Row"></div>
+        </div>
+        <div class="row">
+            <div class="operator-box">+</div>
+            <div id="number2Row"></div>
+        </div>
+        <div class="horizontal-bar"></div>
+        <div class="row">
+            <div class="operator-box" style="visibility:hidden;">+</div>
+            <div id="resultRow"></div>
+        </div>
+        <div class="number-selection">
+            <div class="selection-box" id="select-1x" onclick="selectDigit('1x')">1x</div>
+            <div class="selection-box" onclick="selectDigit(0)">0</div>
+            <div class="selection-box" onclick="selectDigit(1)">1</div>
+            <div class="selection-box" onclick="selectDigit(2)">2</div>
+            <div class="selection-box" onclick="selectDigit(3)">3</div>
+            <div class="selection-box" onclick="selectDigit(4)">4</div>
+            <div class="selection-box" onclick="selectDigit(5)">5</div>
+            <div class="selection-box" onclick="selectDigit(6)">6</div>
+            <div class="selection-box" onclick="selectDigit(7)">7</div>
+            <div class="selection-box" onclick="selectDigit(8)">8</div>
+            <div class="selection-box" onclick="selectDigit(9)">9</div>
+        </div>
+        <button id="validateBtn" onclick="validateSelection()" disabled>Validate</button>
+        <div id="feedback" class="feedback hidden"></div>
+    </div>
+
+    <script>
+        let numDigits;
+        let number1;
+        let number2;
+        let currentDigitIndex;
+        let carry;
+        let selectedDigit = null;
+        let selected1x = false;
+
+        function startGame(digits) {
+            numDigits = digits;
+            number1 = generateRandomNumber(numDigits);
+            number2 = generateRandomNumber(numDigits);
+            let maxResultDigits = Math.max(number1.toString().length, number2.toString().length);
+            let sumDigits = (number1 + number2).toString().length;
+            maxResultDigits = Math.max(maxResultDigits, sumDigits);
+
+            document.documentElement.style.setProperty('--num-columns', maxResultDigits + 1);
+
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+
+            displayNumbers(maxResultDigits);
+            currentDigitIndex = maxResultDigits - 1;
+            carry = Array(maxResultDigits + 1).fill(0);
+            highlightCurrentColumn();
+        }
+
+        function generateRandomNumber(digits) {
+            let min = Math.pow(10, digits - 1);
+            let max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function displayNumbers(maxDigits) {
+            let number1Row = document.getElementById('number1Row');
+            let number2Row = document.getElementById('number2Row');
+            let carryRow = document.getElementById('carryRow');
+            let resultRow = document.getElementById('resultRow');
+            number1Row.innerHTML = '';
+            number2Row.innerHTML = '';
+            carryRow.innerHTML = '';
+            resultRow.innerHTML = '';
+
+            let num1Str = number1.toString().padStart(maxDigits, '0');
+            let num2Str = number2.toString().padStart(maxDigits, '0');
+
+            // For leading zeros detection
+            let num1Started = false;
+            let num2Started = false;
+
+            // Add an extra carry box on the left
+            carryRow.innerHTML += `<div class="carry-box" id="carryExtra"></div>`;
+
+            for (let i = 0; i < maxDigits; i++) {
+                carryRow.innerHTML += `<div class="carry-box" id="carry${i}"></div>`;
+            }
+
+            // Similarly, add an extra number box on the left to align
+            number1Row.innerHTML += `<div class="number-box leading-zero"></div>`;
+            number2Row.innerHTML += `<div class="number-box leading-zero"></div>`;
+            resultRow.innerHTML += `<div class="input-box leading-zero"></div>`;
+
+            for (let i = 0; i < maxDigits; i++) {
+                let num1Digit = num1Str.charAt(i);
+                let num2Digit = num2Str.charAt(i);
+
+                if (num1Digit !== '0' || num1Started || i === maxDigits - 1) {
+                    num1Started = true;
+                    number1Row.innerHTML += `<div class="number-box" id="num1-${i}">${num1Digit}</div>`;
+                } else {
+                    number1Row.innerHTML += `<div class="number-box leading-zero" id="num1-${i}">${num1Digit}</div>`;
+                }
+
+                if (num2Digit !== '0' || num2Started || i === maxDigits - 1) {
+                    num2Started = true;
+                    number2Row.innerHTML += `<div class="number-box" id="num2-${i}">${num2Digit}</div>`;
+                } else {
+                    number2Row.innerHTML += `<div class="number-box leading-zero" id="num2-${i}">${num2Digit}</div>`;
+                }
+
+                resultRow.innerHTML += `<div class="input-box" id="result${i}">_</div>`;
+            }
+        }
+
+        function highlightCurrentColumn() {
+            document.querySelectorAll('.number-box, .carry-box, .input-box').forEach(box => box.classList.remove('highlighted'));
+            if (currentDigitIndex >= 0) {
+                // document.getElementById(`carry${currentDigitIndex}`).classList.add('highlighted');
+                // document.getElementById(`num1-${currentDigitIndex}`).classList.add('highlighted');
+                // document.getElementById(`num2-${currentDigitIndex}`).classList.add('highlighted');
+                document.getElementById(`result${currentDigitIndex}`).classList.add('highlighted');
+            }
+        }
+
+        function selectDigit(value) {
+            if (value === '1x') {
+                selected1x = !selected1x;
+                document.getElementById('select-1x').classList.toggle('selected', selected1x);
+                return;
+            }
+
+            selectedDigit = value;
+            document.querySelectorAll('.selection-box').forEach(box => box.classList.remove('selected'));
+            event.target.classList.add('selected');
+            if (selected1x) {
+                document.getElementById('select-1x').classList.add('selected');
+            }
+            document.getElementById('validateBtn').disabled = false;
+        }
+
+        function validateSelection() {
+            if (selectedDigit === null) return;
+
+            let selectedValue = parseInt(selectedDigit);
+            if (isNaN(selectedValue)) return;
+
+            let num1Digit = parseInt(document.getElementById(`num1-${currentDigitIndex}`).innerText) || 0;
+            let num2Digit = parseInt(document.getElementById(`num2-${currentDigitIndex}`).innerText) || 0;
+            let carryIn = carry[currentDigitIndex] || 0;
+            let sum = num1Digit + num2Digit + carryIn;
+
+            let expectedDigit = sum % 10;
+            let expectedCarryOut = Math.floor(sum / 10);
+
+            let userCarryOut = selected1x ? 1 : 0;
+
+            if (selectedValue === expectedDigit && userCarryOut === expectedCarryOut) {
+                // Correct
+                document.getElementById(`result${currentDigitIndex}`).innerText = selectedValue;
+                if (expectedCarryOut > 0) {
+                    carry[currentDigitIndex - 1] = expectedCarryOut;
+                    if (currentDigitIndex - 1 >= 0) {
+                        document.getElementById(`carry${currentDigitIndex - 1}`).innerText = expectedCarryOut;
+                    } else {
+                        document.getElementById(`carryExtra`).innerText = expectedCarryOut;
+                    }
+                }
+                document.getElementById('feedback').innerText = "Correct!";
+                document.getElementById('feedback').classList.remove('hidden', 'error');
+                document.getElementById('feedback').classList.add('success');
+                currentDigitIndex--;
+                if (currentDigitIndex < 0) {
+                    alert('You have completed the addition!');
+                    document.querySelectorAll('.selection-box').forEach(box => box.style.pointerEvents = 'none');
+                    document.getElementById('validateBtn').disabled = true;
+                } else {
+                    highlightCurrentColumn();
+                }
+                // Reset selections
+                selectedDigit = null;
+                selected1x = false;
+                document.querySelectorAll('.selection-box').forEach(box => box.classList.remove('selected'));
+                document.getElementById('validateBtn').disabled = true;
+            } else {
+                // Incorrect
+                document.getElementById('feedback').innerText = "Incorrect! Try again.";
+                document.getElementById('feedback').classList.remove('hidden', 'success');
+                document.getElementById('feedback').classList.add('error');
+                selectedDigit = null;
+                selected1x = false;
+                document.querySelectorAll('.selection-box').forEach(box => box.classList.remove('selected'));
+                document.getElementById('validateBtn').disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
